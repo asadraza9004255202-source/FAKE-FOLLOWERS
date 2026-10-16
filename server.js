@@ -6,7 +6,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 const PORT = process.env.PORT || 3000;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'asadraza2012';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const DATA_FILE = path.join(__dirname, 'data.json');
 const PUBLIC = __dirname; // index.html & admin.html same folder mein
 const tokens = new Set();
